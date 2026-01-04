@@ -68,6 +68,25 @@
             </div>
           </div>
 
+          <div class="card admin-card admin-span">
+            <h3>Live Players</h3>
+            <div class="muted" style="margin-bottom: 8px;">Server: ohiochrp1</div>
+            <div class="ticket-admin">
+              <div class="ticket-admin-left">
+                <div class="ticket-actions" style="margin-bottom: 8px;">
+                  <button class="btn btn-ghost" id="refreshPlayersBtn" type="button">Refresh</button>
+                  <p class="muted" id="playersStatus" aria-live="polite"></p>
+                </div>
+                <div id="playersList" class="users-list"></div>
+              </div>
+              <div class="ticket-admin-right">
+                <div id="playerDetail" class="card" style="padding: 14px;">
+                  <p class="muted">Select a player to view actions.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -126,8 +145,10 @@
 
       const adminFetchJson = async (url, options = {}) => {
         const ADMIN_KEY = (localStorage.getItem('spermlings_admin_api_key') || '').trim();
+        const token = window.SPERMLINGS_AUTH.getToken();
         const headers = Object.assign({}, options.headers || {});
         if (ADMIN_KEY) headers['x-admin-key'] = ADMIN_KEY;
+        if (token) headers.authorization = `Bearer ${token}`;
         const res = await fetch(url, Object.assign({}, options, { headers }));
         if (!res.ok) {
           const text = await res.text().catch(() => '');
@@ -135,6 +156,159 @@
         }
         return await res.json();
       };
+
+      const FIVEM_SERVER_ID = 'ohiochrp1';
+
+      const playersList = document.getElementById('playersList');
+      const playerDetail = document.getElementById('playerDetail');
+      const playersStatus = document.getElementById('playersStatus');
+      const refreshPlayersBtn = document.getElementById('refreshPlayersBtn');
+
+      let selectedPlayer = null;
+
+      const showPlayersStatus = (text) => {
+        if (playersStatus) playersStatus.textContent = text || '';
+      };
+
+      const renderPlayerDetail = (p) => {
+        if (!playerDetail) return;
+        if (!p) {
+          playerDetail.innerHTML = '<p class="muted">Select a player to view actions.</p>';
+          return;
+        }
+
+        const safe = (v) => (v || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const license = p.license ? safe(p.license) : '';
+        const ping = typeof p.ping === 'number' ? `${p.ping}` : '—';
+
+        playerDetail.innerHTML = `
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
+            <div>
+              <h4 style="margin:0 0 6px;">${safe(p.name || 'unknown')}</h4>
+              <div class="muted">ID: ${safe(p.id)}</div>
+              <div class="muted">Ping: ${safe(ping)}</div>
+              <div class="muted">License: ${license || 'n/a'}</div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-ghost" id="kickPlayerBtn" type="button">Kick</button>
+            <button class="btn btn-ghost" id="banPlayerBtn" type="button" ${license ? '' : 'disabled'}>Ban (license)</button>
+          </div>
+          <p class="muted" id="playerActionStatus" aria-live="polite" style="margin-top: 10px;"></p>
+        `;
+
+        const kickBtn = document.getElementById('kickPlayerBtn');
+        const banBtn = document.getElementById('banPlayerBtn');
+        const status = document.getElementById('playerActionStatus');
+
+        const setActionStatus = (t) => {
+          if (status) status.textContent = t || '';
+        };
+
+        if (kickBtn) {
+          kickBtn.addEventListener('click', async () => {
+            const reason = window.prompt('Kick reason?', 'Kicked by admin') || '';
+            if (!reason.trim()) return;
+            setActionStatus('Kicking…');
+            try {
+              await adminFetchJson(`${API_BASE}/api/admin/fivem/kick`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serverId: FIVEM_SERVER_ID, playerId: p.id, reason }),
+              });
+              setActionStatus('Kick queued.');
+            } catch (e) {
+              setActionStatus(e?.message ? `Failed: ${e.message}` : 'Failed.');
+            }
+          });
+        }
+
+        if (banBtn) {
+          banBtn.addEventListener('click', async () => {
+            if (!p.license) return;
+            const reason = window.prompt('Ban reason?', 'Banned by admin') || '';
+            if (!reason.trim()) return;
+            setActionStatus('Banning…');
+            try {
+              await adminFetchJson(`${API_BASE}/api/admin/fivem/ban`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serverId: FIVEM_SERVER_ID, playerId: p.id, license: p.license, reason }),
+              });
+              setActionStatus('Ban queued.');
+            } catch (e) {
+              setActionStatus(e?.message ? `Failed: ${e.message}` : 'Failed.');
+            }
+          });
+        }
+      };
+
+      const loadPlayers = async () => {
+        if (!playersList) return;
+        showPlayersStatus('Loading…');
+        playersList.innerHTML = '<div class="muted">Loading…</div>';
+        try {
+          const data = await adminFetchJson(`${API_BASE}/api/admin/fivem/players?serverId=${encodeURIComponent(FIVEM_SERVER_ID)}`);
+          const items = Array.isArray(data.players) ? data.players : [];
+
+          if (!items.length) {
+            playersList.innerHTML = '<div class="muted">No players (or server not connected).</div>';
+            showPlayersStatus('');
+            renderPlayerDetail(null);
+            return;
+          }
+
+          playersList.innerHTML = '';
+          items.forEach((p) => {
+            const row = document.createElement('div');
+            row.className = 'user-row';
+
+            const meta = document.createElement('div');
+            meta.className = 'user-meta';
+
+            const name = document.createElement('div');
+            name.className = 'user-name';
+            name.textContent = p.name || 'unknown';
+
+            const sub = document.createElement('div');
+            sub.className = 'user-rank';
+            sub.textContent = `id: ${p.id} • ping: ${typeof p.ping === 'number' ? p.ping : '—'}${p.license ? ` • license: ${p.license}` : ''}`;
+
+            meta.appendChild(name);
+            meta.appendChild(sub);
+
+            const actions = document.createElement('div');
+            actions.className = 'user-actions';
+
+            const open = document.createElement('button');
+            open.className = 'nav-btn';
+            open.type = 'button';
+            open.textContent = 'Open';
+            open.addEventListener('click', () => {
+              selectedPlayer = p;
+              renderPlayerDetail(p);
+            });
+
+            actions.appendChild(open);
+            row.appendChild(meta);
+            row.appendChild(actions);
+            playersList.appendChild(row);
+          });
+
+          showPlayersStatus(`Online: ${items.length}`);
+          if (selectedPlayer) {
+            const stillThere = items.find((p) => `${p.id}` === `${selectedPlayer.id}`);
+            renderPlayerDetail(stillThere || null);
+          }
+        } catch (e) {
+          const msg = e?.message || 'Failed to load players.';
+          playersList.innerHTML = `<div class="muted">${msg}</div>`;
+          showPlayersStatus(msg);
+          renderPlayerDetail(null);
+        }
+      };
+
+      if (refreshPlayersBtn) refreshPlayersBtn.addEventListener('click', () => loadPlayers());
 
       const ticketsList = document.getElementById('ticketsList');
       const ticketDetail = document.getElementById('ticketDetail');
@@ -317,121 +491,9 @@
         }
       };
 
-      const form = document.getElementById('userForm');
-      const msg = document.getElementById('adminMsg');
-      const list = document.getElementById('usersList');
-      const clearBtn = document.getElementById('clearBtn');
-
-      const uName = document.getElementById('uName');
-      const uPass = document.getElementById('uPass');
-      const uRank = document.getElementById('uRank');
-
-      const showMsg = (text) => {
-        msg.textContent = text;
-        msg.hidden = !text;
-      };
-
-      if (!window.SPERMLINGS_AUTH.loadUsers || !window.SPERMLINGS_AUTH.upsertUser || !window.SPERMLINGS_AUTH.deleteUser) {
-        const userCard = form ? form.closest('.card') : null;
-        const usersCard = list ? list.closest('.card') : null;
-        if (userCard) userCard.hidden = true;
-        if (usersCard) usersCard.hidden = true;
-        if (form) form.addEventListener('submit', (e) => e.preventDefault());
-        if (clearBtn) clearBtn.addEventListener('click', (e) => e.preventDefault());
-        showMsg('User management is disabled.');
-      }
-
-      const render = () => {
-        if (!window.SPERMLINGS_AUTH.loadUsers) return;
-        const users = window.SPERMLINGS_AUTH.loadUsers();
-        list.innerHTML = '';
-
-        users.forEach((u) => {
-          if (!u || !u.username) return;
-
-          const row = document.createElement('div');
-          row.className = 'user-row';
-
-          const meta = document.createElement('div');
-          meta.className = 'user-meta';
-
-          const name = document.createElement('div');
-          name.className = 'user-name';
-          name.textContent = u.username;
-
-          const rank = document.createElement('div');
-          rank.className = 'user-rank';
-          rank.textContent = `rank: ${u.rank || 'member'}`;
-
-          meta.appendChild(name);
-          meta.appendChild(rank);
-
-          const actions = document.createElement('div');
-          actions.className = 'user-actions';
-
-          const edit = document.createElement('button');
-          edit.className = 'nav-btn';
-          edit.type = 'button';
-          edit.textContent = 'Edit';
-          edit.addEventListener('click', () => {
-            uName.value = u.username;
-            uPass.value = u.password || '';
-            uRank.value = u.rank || 'member';
-            showMsg('');
-          });
-
-          const del = document.createElement('button');
-          del.className = 'nav-btn';
-          del.type = 'button';
-          del.textContent = 'Delete';
-          del.disabled = u.username === 'Dr Piggy jr';
-          del.addEventListener('click', () => {
-            window.SPERMLINGS_AUTH.deleteUser(u.username);
-            render();
-          });
-
-          actions.appendChild(edit);
-          actions.appendChild(del);
-
-          row.appendChild(meta);
-          row.appendChild(actions);
-          list.appendChild(row);
-        });
-      };
-
-      clearBtn.addEventListener('click', () => {
-        if (!window.SPERMLINGS_AUTH.loadUsers) return;
-        uName.value = '';
-        uPass.value = '';
-        uRank.value = 'member';
-        showMsg('');
-      });
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (!window.SPERMLINGS_AUTH.upsertUser) return;
-        const username = (uName.value || '').trim();
-        const password = uPass.value || '';
-        const rank = uRank.value || 'member';
-
-        if (!username) {
-          showMsg('Username required');
-          return;
-        }
-
-        if (username === 'Dr Piggy jr' && rank !== 'owner') {
-          showMsg('Owner must stay owner');
-          return;
-        }
-
-        window.SPERMLINGS_AUTH.upsertUser({ username, password, rank });
-        showMsg('Saved');
-        render();
-      });
-
       loadContentIntoForm();
-      render();
       loadTickets();
+      loadPlayers();
     </script>
   </body>
 </html>
