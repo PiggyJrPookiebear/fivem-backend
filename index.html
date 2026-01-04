@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay" />
+    <title>Canadia Highridge Roleplay</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a class="is-active" href="index.html">Home</a>
+          <a href="staff.html">Staff</a>
+          <a href="ticket.html">Ticket</a>
+          <a href="#discord">Join</a>
+          <a id="adminLink" href="admin.html" hidden>Admin</a>
+          <a class="nav-btn" id="loginBtn" href="login.html">Login</a>
+          <button class="nav-btn" id="logoutBtn" type="button" hidden>Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="container hero-inner">
+          <h1>Highridge Roleplay</h1>
+          <p class="lead" data-content-key="home_lead">Welcome to Canadian Highridge RP 🇨🇦 A Public, Serious Roleplay FiveM server based in Canada. We’re all about Immersive, Story-Driven RP within a Respectful, Realism-Focused community.</p>
+          <div class="badges" aria-label="Highlights">
+            <span class="badge">Events</span>
+            <span class="badge">Memes</span>
+            <span class="badge">Squads</span>
+            <span class="badge">Chaos</span>
+          </div>
+          <div class="hero-actions">
+            <a class="btn" href="#discord">Join</a>
+            <a class="btn btn-ghost" href="staff.html">Meet the Staff</a>
+            <a class="btn btn-ghost" href="ticket.html">Open a Ticket</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="announcements" class="section section-alt">
+        <div class="container">
+          <div class="section-title">
+            <h2>Announcements</h2>
+            <p>Live from Discord</p>
+          </div>
+
+          <div class="card announcements-card">
+            <div id="announceList" class="announce-list">
+              <div class="muted">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt">
+        <div class="container">
+          <div class="stats">
+            <div class="stat-card">
+              <h3>Always active</h3>
+              <p class="muted">Chats that don’t die.</p>
+            </div>
+            <div class="stat-card">
+              <h3>Event nights</h3>
+              <p class="muted">Hop in when we run it.</p>
+            </div>
+            <div class="stat-card">
+              <h3>Clip zone</h3>
+              <p class="muted">Highlights + dumb moments.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="server" class="section">
+        <div class="container">
+          <div class="section-title">
+            <h2>Canadia Highridge Roleplay</h2>
+            <p>Highridge Roleplay</p>
+          </div>
+
+          <div class="card server-card">
+            <div class="server-top">
+              <div>
+                <div class="server-name">Highridge Roleplay</div>
+                <div class="muted">join Our Server</div>
+                <div class="muted" id="discordMembers">Discord members: —</div>
+              </div>
+              <div class="server-metrics">
+                <span id="fivemStatus" class="status-pill">Checking…</span>
+                <span id="fivemPlayers" class="players-pill">Players: —</span>
+              </div>
+            </div>
+
+            <div class="server-actions">
+              <a class="btn" href="https://highridge-roleplay-vr65a5.users.cfx.re/" target="_blank" rel="noreferrer">Join (cfx.re)</a>
+              <a class="btn btn-ghost" href="fivem://connect/206.168.173.55:3034">Direct Connect</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="container">
+          <div class="section-title">
+            <h2>Community vibes</h2>
+            <p>What you’ll find inside.</p>
+          </div>
+          <div class="grid">
+            <article class="card feature">
+              <h3>Events & raids</h3>
+              <p class="muted">Weekly chaos, scheduled.</p>
+              <p>Event nights, community challenges, and “everybody get in here” moments.</p>
+            </article>
+            <article class="card feature">
+              <h3>Squads</h3>
+              <p class="muted">Find people who match your energy.</p>
+              <p>Looking for duo/trio? Drop your role and we’ll get you paired up.</p>
+            </article>
+            <article class="card feature">
+              <h3>Clips & flex</h3>
+              <p class="muted">Post highlights and get roasted lovingly.</p>
+              <p>Share clips, screenshots, builds, and your best (or worst) plays.</p>
+            </article>
+            <article class="card feature">
+              <h3>Giveaways</h3>
+              <p class="muted">When we feel generous.</p>
+              <p>Random drops, fun rewards, and community votes.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="discord" class="section">
+        <div class="container">
+          <div class="cta">
+            <div>
+              <h2 data-content-key="home_join_title">Join</h2>
+              <p class="muted" data-content-key="home_join_subtitle">Tap the button and you’re in.</p>
+              <p class="invite">https://discord.gg/wumQ6Jyy8S</p>
+            </div>
+            <div class="cta-actions">
+              <a class="btn" href="https://discord.gg/wumQ6Jyy8S" target="_blank" rel="noreferrer">Join</a>
+              <a class="btn btn-ghost" href="staff.html">Staff page</a>
+              <a class="btn btn-ghost" href="ticket.html">Open a Ticket</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="music-float" aria-label="Music player">
+      <div class="music-float-inner">
+        <div class="music-float-title">song2</div>
+        <button class="music-toggle" id="musicToggle" type="button">Play</button>
+        <audio id="bgMusic" preload="metadata" loop>
+          <source src="Songs/song2.mp3" type="audio/mpeg" />
+        </audio>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p class="muted"> <span id="year"></span> Canadia Highridge Roleplay</p>
+        <a class="muted" href="#top">Back to top</a>
+      </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="content.js"></script>
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        logoutBtn.addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+      }
+
+      if (adminLink && window.SPERMLINGS_AUTH.isAdmin()) {
+        adminLink.hidden = false;
+      }
+
+      window.SPERMLINGS_CONTENT.applyContent(document);
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const audio = document.getElementById('bgMusic');
+      const toggle = document.getElementById('musicToggle');
+
+      const setState = (isPlaying) => {
+        toggle.textContent = isPlaying ? 'Pause' : 'Play';
+      };
+
+
+      const setServerStatus = (online, players) => {
+        const statusEl = document.getElementById('fivemStatus');
+        const playersEl = document.getElementById('fivemPlayers');
+        if (!statusEl || !playersEl) return;
+
+        if (online) {
+          statusEl.textContent = 'Online';
+          statusEl.classList.remove('is-offline');
+          statusEl.classList.add('is-online');
+        } else {
+          statusEl.textContent = 'Offline';
+          statusEl.classList.remove('is-online');
+          statusEl.classList.add('is-offline');
+        }
+
+        if (typeof players === 'number') {
+          playersEl.textContent = `Players: ${players}`;
+        } else {
+          playersEl.textContent = 'Players: —';
+        }
+      };
+
+      const fetchJson = async (url) => {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      };
+
+      const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+
+      const loadDiscordMemberCount = async () => {
+        const el = document.getElementById('discordMembers');
+        if (!el) return;
+        try {
+          const data = await fetchJson(`${API_BASE}/api/discord/member-count`);
+          if (typeof data.count === 'number') {
+            el.textContent = `Discord members: ${data.count}`;
+          } else {
+            el.textContent = 'Discord members: —';
+          }
+        } catch {
+          el.textContent = 'Discord members: —';
+        }
+      };
+
+      const loadAnnouncements = async () => {
+        const list = document.getElementById('announceList');
+        if (!list) return;
+        try {
+          const data = await fetchJson(`${API_BASE}/api/discord/announcements`);
+          const items = data && Array.isArray(data.items) ? data.items : [];
+          if (!items.length) {
+            list.innerHTML = '<div class="muted">No announcements yet.</div>';
+            return;
+          }
+
+          list.innerHTML = '';
+          items.slice(0, 10).forEach((it) => {
+            const row = document.createElement('div');
+            row.className = 'announce-row';
+
+            const left = document.createElement('div');
+            left.className = 'announce-left';
+
+            const author = document.createElement('div');
+            author.className = 'announce-author';
+            author.textContent = it.author?.displayName || it.author?.username || 'Announcement';
+
+            const content = document.createElement('div');
+            content.className = 'announce-content';
+            content.textContent = it.content || '';
+
+            left.appendChild(author);
+            left.appendChild(content);
+
+            const right = document.createElement('a');
+            right.className = 'muted announce-link';
+            right.href = it.url || '#';
+            right.target = '_blank';
+            right.rel = 'noreferrer';
+            right.textContent = 'Open';
+
+            row.appendChild(left);
+            row.appendChild(right);
+            list.appendChild(row);
+          });
+        } catch {
+          list.innerHTML = '<div class="muted">Announcements unavailable.</div>';
+        }
+      };
+
+      const loadFiveMStatus = async () => {
+        const serverCode = 'vr65a5';
+        try {
+          const data = await fetchJson(`https://servers-frontend.fivem.net/api/servers/single/${serverCode}`);
+          const players = data && data.Data && Array.isArray(data.Data.players) ? data.Data.players.length : undefined;
+          setServerStatus(true, typeof players === 'number' ? players : undefined);
+          return;
+        } catch {
+          // fall through to direct endpoints
+        }
+
+        const bases = [
+          'https://highridge-roleplay-vr65a5.users.cfx.re',
+          'http://206.168.173.55:3034',
+          'https://206.168.173.55:3034',
+        ];
+
+        for (const base of bases) {
+          try {
+            await fetchJson(`${base}/info.json`);
+            const players = await fetchJson(`${base}/players.json`);
+            setServerStatus(true, Array.isArray(players) ? players.length : undefined);
+            return;
+          } catch {
+            // try next base
+          }
+        }
+
+        setServerStatus(false);
+      };
+
+      const tryAutoPlay = async () => {
+        try {
+          await audio.play();
+          setState(true);
+        } catch {
+          setState(false);
+        }
+      };
+
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setState(true);
+          } catch {
+            setState(false);
+          }
+        } else {
+          audio.pause();
+          setState(false);
+        }
+      });
+
+      tryAutoPlay();
+      loadFiveMStatus();
+      loadDiscordMemberCount();
+      loadAnnouncements();
+    </script>
+  </body>
+</html>

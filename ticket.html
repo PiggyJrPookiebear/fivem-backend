@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — ticket" />
+    <title>Canadia Highridge Roleplay — Ticket</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="staff.html">Staff</a>
+          <a class="is-active" href="ticket.html">Ticket</a>
+          <a href="index.html#discord">Join</a>
+          <a id="adminLink" href="admin.html" hidden>Admin</a>
+          <a class="nav-btn" id="loginBtn" href="login.html">Login</a>
+          <button class="nav-btn" id="logoutBtn" type="button" hidden>Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero hero-compact">
+        <div class="container hero-inner">
+          <h1>Support Ticket</h1>
+          <p class="lead">Send a message to the staff team for help.</p>
+          <div class="hero-actions">
+            <a class="btn btn-ghost" href="index.html">Back to Home</a>
+            <a class="btn" href="index.html#discord">Join</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="card ticket-card" id="ticketTopBanner" style="margin-bottom: 14px;" hidden>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
+              <div>
+                <h3 style="margin: 0 0 6px;">Ticket sent</h3>
+                <p class="muted" style="margin: 0;">Save your Ticket ID.</p>
+              </div>
+              <div>
+                <a class="btn btn-ghost" id="ticketViewBtn" href="ticket-view.html">View Ticket</a>
+              </div>
+            </div>
+            <div style="margin-top: 10px; display:grid; gap: 6px;">
+              <div><span class="muted">Ticket ID:</span> <span id="ticketTopId" style="font-weight: 800; word-break: break-all;"></span></div>
+              <div><span class="muted">Name:</span> <span id="ticketTopName"></span></div>
+              <div><span class="muted">Email:</span> <span id="ticketTopEmail"></span></div>
+              <div><span class="muted">Subject:</span> <span id="ticketTopSubject"></span></div>
+            </div>
+            <p class="muted" style="margin: 10px 0 0;">Open Ticket Viewer to see your tickets.</p>
+          </div>
+
+          <div class="section-title">
+            <h2>Open a Ticket</h2>
+            <p>This will post to the Discord staff channel and appear in the Admin panel.</p>
+          </div>
+
+          <div class="card ticket-card">
+            <form id="ticketForm" class="ticket-form">
+              <div class="ticket-grid">
+                <div>
+                  <label class="auth-label" for="tName">Name</label>
+                  <input class="auth-input" id="tName" name="name" autocomplete="name" required />
+                </div>
+                <div>
+                  <label class="auth-label" for="tEmail">Email</label>
+                  <input class="auth-input" id="tEmail" name="email" autocomplete="email" placeholder="you@example.com" required />
+                </div>
+              </div>
+
+              <label class="auth-label" for="tSubject">Subject</label>
+              <input class="auth-input" id="tSubject" name="subject" autocomplete="off" required />
+
+              <label class="auth-label" for="tMessage">Message</label>
+              <textarea class="auth-input ticket-textarea" id="tMessage" name="message" rows="6" required></textarea>
+
+              <div class="ticket-actions">
+                <button class="btn" type="submit" id="ticketSubmit">Send Ticket</button>
+                <p class="muted" id="ticketStatus" aria-live="polite"></p>
+              </div>
+            </form>
+          </div>
+
+          <div class="card ticket-card" id="ticketInfo" style="margin-top: 14px;" hidden>
+            <p class="muted" style="margin: 0 0 6px;">Your Ticket ID</p>
+            <div style="font-weight: 700;" id="ticketLastId"></div>
+            <p class="muted" style="margin: 10px 0 0;">If you need to follow up, share this ID with staff.</p>
+          </div>
+
+          <div class="section-title" style="margin-top: 18px;">
+            <h2>Check My Ticket</h2>
+            <p>Open the Ticket Viewer to load your ticket and send messages.</p>
+          </div>
+
+          <div class="card ticket-card">
+            <div class="ticket-actions">
+              <a class="btn" href="ticket-view.html">Open Ticket Viewer</a>
+              <p class="muted">You must be logged in.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="music-float" aria-label="Music player">
+      <div class="music-float-inner">
+        <div class="music-float-title">song2</div>
+        <button class="music-toggle" id="musicToggle" type="button">Play</button>
+        <audio id="bgMusic" preload="metadata" loop>
+          <source src="Songs/song2.mp3" type="audio/mpeg" />
+        </audio>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p class="muted"> <span id="year"></span> Canadia Highridge Roleplay</p>
+        <a class="muted" href="index.html">Home</a>
+      </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      window.SPERMLINGS_AUTH.requireAuth();
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        logoutBtn.addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+      }
+
+      if (adminLink && window.SPERMLINGS_AUTH.isAdmin()) {
+        adminLink.hidden = false;
+      }
+
+      const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+
+      const ticketInfo = document.getElementById('ticketInfo');
+      const ticketLastId = document.getElementById('ticketLastId');
+      const ticketTopBanner = document.getElementById('ticketTopBanner');
+      const ticketTopId = document.getElementById('ticketTopId');
+      const ticketTopName = document.getElementById('ticketTopName');
+      const ticketTopEmail = document.getElementById('ticketTopEmail');
+      const ticketTopSubject = document.getElementById('ticketTopSubject');
+      const ticketViewBtn = document.getElementById('ticketViewBtn');
+
+      const ticketStatusEl = document.getElementById('ticketStatus');
+      if (ticketStatusEl) ticketStatusEl.textContent = 'Ticket system ready.';
+
+      window.addEventListener('error', (e) => {
+        const msg = e?.message || 'Script error';
+        if (ticketStatusEl) ticketStatusEl.textContent = `Error: ${msg}`;
+      });
+
+      window.addEventListener('unhandledrejection', (e) => {
+        const msg = e?.reason?.message || e?.reason || 'Promise rejected';
+        if (ticketStatusEl) ticketStatusEl.textContent = `Error: ${msg}`;
+      });
+
+      const escapeHtml = (v) => (v || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      const setTicketLink = (id, details) => {
+        if (!ticketInfo) return;
+        const safeId = escapeHtml(id);
+        const safeName = escapeHtml(details?.name || '');
+        const safeEmail = escapeHtml(details?.email || '');
+        const safeSubject = escapeHtml(details?.subject || '');
+        ticketInfo.innerHTML = `
+          <p class="muted" style="margin: 0 0 6px;">You sent a ticket</p>
+          <div style="display:grid; gap: 6px;">
+            <div><span class="muted">Ticket ID:</span> <span style="font-weight: 700;">${safeId}</span></div>
+            <div><span class="muted">Name:</span> <span>${safeName || '—'}</span></div>
+            <div><span class="muted">Email:</span> <span>${safeEmail || '—'}</span></div>
+            <div><span class="muted">Subject:</span> <span>${safeSubject || '—'}</span></div>
+          </div>
+          <p class="muted" style="margin: 10px 0 0;">Save the ID. Use the Ticket Viewer to load your ticket later.</p>
+        `;
+        ticketInfo.hidden = false;
+      };
+
+      const setLastTicketId = (id, details) => {
+        if (!id) return;
+        localStorage.setItem('spermlings_last_ticket_id', id);
+        if (ticketLastId) ticketLastId.textContent = id;
+        if (ticketInfo) ticketInfo.hidden = false;
+
+        if (ticketTopId) ticketTopId.textContent = id;
+        if (ticketTopName) ticketTopName.textContent = (details?.name || localStorage.getItem('spermlings_last_ticket_name') || '').trim() || '—';
+        if (ticketTopEmail) ticketTopEmail.textContent = (details?.email || localStorage.getItem('spermlings_last_ticket_email') || '').trim() || '—';
+        if (ticketTopSubject) ticketTopSubject.textContent = (details?.subject || '').trim() || '—';
+        if (ticketViewBtn) ticketViewBtn.setAttribute('href', `ticket-view.html?id=${encodeURIComponent(id)}`);
+        if (ticketTopBanner) ticketTopBanner.hidden = false;
+        try {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch {
+          window.scrollTo(0, 0);
+        }
+      };
+
+      const postJson = async (url, body) => {
+        const token = window.SPERMLINGS_AUTH.getToken();
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+        }
+        return await res.json();
+      };
+
+      const wireTicketForm = () => {
+        const form = document.getElementById('ticketForm');
+        const status = document.getElementById('ticketStatus');
+        const submit = document.getElementById('ticketSubmit');
+        if (!form || !status || !submit) return;
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          status.textContent = 'Submitting…';
+          submit.disabled = true;
+
+          const payload = {
+            name: document.getElementById('tName')?.value || '',
+            email: document.getElementById('tEmail')?.value || '',
+            subject: document.getElementById('tSubject')?.value || '',
+            message: document.getElementById('tMessage')?.value || '',
+          };
+
+          try {
+            const data = await postJson(`${API_BASE}/api/tickets`, payload);
+            if (data && data.ticketId) {
+              status.textContent = `Ticket sent. ID: ${data.ticketId}`;
+              localStorage.setItem('spermlings_last_ticket_name', payload.name || '');
+              localStorage.setItem('spermlings_last_ticket_email', payload.email || '');
+              setLastTicketId(data.ticketId, payload);
+
+              setTicketLink(data.ticketId, payload);
+            } else {
+              status.textContent = 'Ticket sent.';
+            }
+            form.reset();
+          } catch (err) {
+            status.textContent = err?.message ? `Failed: ${err.message}` : 'Failed to send ticket.';
+          } finally {
+            submit.disabled = false;
+          }
+        });
+      };
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const audio = document.getElementById('bgMusic');
+      const toggle = document.getElementById('musicToggle');
+
+      const setState = (isPlaying) => {
+        toggle.textContent = isPlaying ? 'Pause' : 'Play';
+      };
+
+      const tryAutoPlay = async () => {
+        try {
+          await audio.play();
+          setState(true);
+        } catch {
+          setState(false);
+        }
+      };
+
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setState(true);
+          } catch {
+            setState(false);
+          }
+        } else {
+          audio.pause();
+          setState(false);
+        }
+      });
+
+      tryAutoPlay();
+      wireTicketForm();
+    </script>
+  </body>
+</html>

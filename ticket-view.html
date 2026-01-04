@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — ticket" />
+    <title>Canadia Highridge Roleplay — Ticket</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="staff.html">Staff</a>
+          <a class="is-active" href="ticket.html">Ticket</a>
+          <a href="index.html#discord">Join</a>
+          <a id="adminLink" href="admin.html" hidden>Admin</a>
+          <a class="nav-btn" id="loginBtn" href="login.html">Login</a>
+          <button class="nav-btn" id="logoutBtn" type="button" hidden>Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero hero-compact">
+        <div class="container hero-inner">
+          <h1>Ticket</h1>
+          <p class="lead">View your ticket and chat with staff.</p>
+          <div class="hero-actions">
+            <a class="btn btn-ghost" href="ticket.html">Back</a>
+            <a class="btn" href="index.html#discord">Join</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-title">
+            <h2>My Tickets</h2>
+            <p id="ticketMeta" class="muted">Loading…</p>
+          </div>
+
+          <div class="card ticket-card" id="ticketSummary">
+            <div class="muted" id="ticketCreatedNote" style="margin-bottom: 8px;" hidden>Ticket created. Save your Ticket ID.</div>
+            <div style="display:grid; gap: 6px;">
+              <div><span class="muted">Ticket ID:</span> <span id="sumId" style="font-weight:700;"></span></div>
+              <div><span class="muted">Name:</span> <span id="sumName"></span></div>
+              <div><span class="muted">Contact:</span> <span id="sumContact"></span></div>
+            </div>
+          </div>
+
+          <div class="card ticket-card" id="ticketThread">
+            <p class="muted">Loading…</p>
+          </div>
+
+          <div class="card ticket-card" id="ticketVerify" style="margin-top: 14px;">
+            <div class="section-title" style="margin-bottom: 10px;">
+              <h2>Select a Ticket</h2>
+              <p>These are tickets created by your account.</p>
+            </div>
+            <div class="ticket-actions" style="justify-content: space-between; align-items: center;">
+              <select class="auth-input" id="myTicketsSelect" style="max-width: 520px;"></select>
+              <button class="btn btn-ghost" id="refreshTicketsBtn" type="button">Refresh</button>
+            </div>
+            <p class="muted" id="verifyStatus" aria-live="polite"></p>
+          </div>
+
+          <div class="card ticket-card" style="margin-top: 14px;">
+            <form id="ticketMsgForm" class="ticket-form">
+              <label class="auth-label" for="ticketMsg">Send a message</label>
+              <textarea class="auth-input ticket-textarea" id="ticketMsg" rows="4"></textarea>
+              <div class="ticket-actions">
+                <button class="btn" type="submit" id="ticketMsgBtn">Send</button>
+                <p class="muted" id="ticketMsgStatus" aria-live="polite"></p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="music-float" aria-label="Music player">
+      <div class="music-float-inner">
+        <div class="music-float-title">song2</div>
+        <button class="music-toggle" id="musicToggle" type="button">Play</button>
+        <audio id="bgMusic" preload="metadata" loop>
+          <source src="Songs/song2.mp3" type="audio/mpeg" />
+        </audio>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p class="muted"> <span id="year"></span> Canadia Highridge Roleplay</p>
+        <a class="muted" href="index.html">Home</a>
+      </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      window.SPERMLINGS_AUTH.requireAuth();
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        logoutBtn.addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+      }
+
+      if (adminLink && window.SPERMLINGS_AUTH.isAdmin()) {
+        adminLink.hidden = false;
+      }
+
+      const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+
+      const authHeaders = () => {
+        const token = window.SPERMLINGS_AUTH.getToken();
+        return { authorization: `Bearer ${token}` };
+      };
+
+      const postJson = async (url, body) => {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+        }
+        return await res.json();
+      };
+
+      const getJson = async (url) => {
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: Object.assign({}, authHeaders()),
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+        }
+        return await res.json();
+      };
+
+      const initialTicketId = () => {
+        const params = new URLSearchParams(window.location.search);
+        return (params.get('id') || '').trim();
+      };
+
+      let currentTicketId = '';
+
+      let currentTicketStatus = null;
+
+      const wasJustCreated = () => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('created') === '1';
+      };
+
+      const renderTicket = (ticket) => {
+        const meta = document.getElementById('ticketMeta');
+        const wrap = document.getElementById('ticketThread');
+        if (!meta || !wrap) return;
+
+        const input = document.getElementById('ticketMsg');
+        const btn = document.getElementById('ticketMsgBtn');
+        const statusEl = document.getElementById('ticketMsgStatus');
+
+        if (!ticket) {
+          currentTicketStatus = null;
+          currentTicketId = '';
+          meta.textContent = 'Select a ticket to view.';
+          wrap.innerHTML = '<p class="muted">Choose a ticket from the list above.</p>';
+
+          if (input) input.disabled = true;
+          if (btn) btn.disabled = true;
+          if (statusEl) statusEl.textContent = '';
+          return;
+        }
+
+        currentTicketId = ticket.id || '';
+        const status = ticket.status || 'open';
+        currentTicketStatus = status;
+        const statusLabel = status === 'in_progress' ? 'in progress' : status;
+        meta.textContent = `ID: ${ticket.id} • Status: ${statusLabel} • Subject: ${ticket.subject || ''}`;
+
+        const msgs = Array.isArray(ticket.messages) ? ticket.messages : [];
+        const msgHtml = msgs
+          .map((m) => {
+            const who = m.from === 'admin' ? 'Staff' : 'You';
+            const when = m.at ? new Date(m.at).toLocaleString() : '';
+            const text = (m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<div class="card" style="padding: 10px; margin: 10px 0;"><div class="muted" style="margin-bottom: 6px;">${who}${when ? ` • ${when}` : ''}</div><div>${text}</div></div>`;
+          })
+          .join('');
+
+        wrap.innerHTML = msgHtml || '<p class="muted">No messages yet.</p>';
+
+        const isClosed = status === 'closed';
+        if (input) input.disabled = isClosed;
+        if (btn) btn.disabled = isClosed;
+        if (statusEl) statusEl.textContent = isClosed ? 'This ticket is closed. You can no longer send messages.' : '';
+      };
+
+      const setSummaryFromTicket = (ticket) => {
+        const sumName = document.getElementById('sumName');
+        const sumContact = document.getElementById('sumContact');
+        if (sumName) sumName.textContent = ticket?.name || '—';
+        const contact = ticket?.email || ticket?.contact || '—';
+        if (sumContact) sumContact.textContent = contact || '—';
+      };
+
+      const loadTicket = async (id) => {
+        const ticketId = (id || '').trim();
+        const note = document.getElementById('ticketCreatedNote');
+        const sumId = document.getElementById('sumId');
+        const sumName = document.getElementById('sumName');
+        const sumContact = document.getElementById('sumContact');
+        if (sumId) sumId.textContent = ticketId || '—';
+        if (sumName) sumName.textContent = '—';
+        if (sumContact) sumContact.textContent = '—';
+
+        if (!ticketId) {
+          renderTicket(null);
+          if (note) note.hidden = !wasJustCreated();
+          return;
+        }
+
+        if (note) note.hidden = true;
+
+        try {
+          const data = await getJson(`${API_BASE}/api/my/tickets/${encodeURIComponent(ticketId)}`);
+          renderTicket(data.ticket);
+          setSummaryFromTicket(data.ticket);
+        } catch (err) {
+          renderTicket(null);
+          const msg = err?.message ? `Failed: ${err.message}` : 'Failed to load ticket.';
+          const meta = document.getElementById('ticketMeta');
+          if (meta) meta.textContent = msg;
+        }
+      };
+
+      const loadMyTickets = async (preferredId) => {
+        const select = document.getElementById('myTicketsSelect');
+        const status = document.getElementById('verifyStatus');
+        if (!select) return;
+
+        select.innerHTML = '';
+        if (status) status.textContent = 'Loading tickets…';
+
+        try {
+          const data = await getJson(`${API_BASE}/api/my/tickets`);
+          const items = Array.isArray(data.tickets) ? data.tickets : [];
+          if (!items.length) {
+            select.innerHTML = '<option value="">No tickets yet</option>';
+            if (status) status.textContent = '';
+            renderTicket(null);
+            return;
+          }
+
+          items.forEach((t) => {
+            const opt = document.createElement('option');
+            const statusLabel = t.status === 'in_progress' ? 'in progress' : (t.status || 'open');
+            opt.value = t.id;
+            opt.textContent = `${t.subject || 'Ticket'} (${statusLabel})`;
+            select.appendChild(opt);
+          });
+
+          const target = preferredId && items.some((t) => t.id === preferredId) ? preferredId : items[0].id;
+          select.value = target;
+          if (status) status.textContent = '';
+          await loadTicket(target);
+        } catch (err) {
+          if (status) status.textContent = err?.message ? `Failed: ${err.message}` : 'Failed to load tickets.';
+        }
+      };
+
+      const wireVerifyForm = () => {
+        const select = document.getElementById('myTicketsSelect');
+        const btn = document.getElementById('refreshTicketsBtn');
+        const status = document.getElementById('verifyStatus');
+        if (!select || !btn || !status) return;
+
+        select.addEventListener('change', async () => {
+          const id = (select.value || '').trim();
+          if (!id) return;
+          await loadTicket(id);
+        });
+
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          try {
+            await loadMyTickets(select.value || '');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      };
+
+      const wireMessageForm = () => {
+        const form = document.getElementById('ticketMsgForm');
+        const input = document.getElementById('ticketMsg');
+        const btn = document.getElementById('ticketMsgBtn');
+        const status = document.getElementById('ticketMsgStatus');
+        if (!form || !input || !btn || !status) return;
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          status.textContent = '';
+
+          const text = (input.value || '').trim();
+          if (!text) {
+            status.textContent = 'Message required';
+            return;
+          }
+
+          const id = currentTicketId;
+          if (!id) {
+            status.textContent = 'Select a ticket first.';
+            return;
+          }
+
+          if (currentTicketStatus === 'closed') {
+            status.textContent = 'This ticket is closed. You can no longer send messages.';
+            return;
+          }
+
+          btn.disabled = true;
+          try {
+            await postJson(`${API_BASE}/api/my/tickets/${encodeURIComponent(id)}/message`, { message: text });
+            input.value = '';
+            status.textContent = 'Sent.';
+            await loadTicket(id);
+          } catch (err) {
+            status.textContent = err?.message ? `Failed: ${err.message}` : 'Failed to send.';
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      };
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const audio = document.getElementById('bgMusic');
+      const toggle = document.getElementById('musicToggle');
+
+      const setState = (isPlaying) => {
+        toggle.textContent = isPlaying ? 'Pause' : 'Play';
+      };
+
+      const tryAutoPlay = async () => {
+        try {
+          await audio.play();
+          setState(true);
+        } catch {
+          setState(false);
+        }
+      };
+
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setState(true);
+          } catch {
+            setState(false);
+          }
+        } else {
+          audio.pause();
+          setState(false);
+        }
+      });
+
+      tryAutoPlay();
+      wireMessageForm();
+      wireVerifyForm();
+      loadMyTickets(initialTicketId());
+    </script>
+  </body>
+</html>

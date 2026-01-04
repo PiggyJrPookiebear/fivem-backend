@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — ticket created" />
+    <title>Canadia Highridge Roleplay — Ticket Created</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="staff.html">Staff</a>
+          <a class="is-active" href="ticket.html">Ticket</a>
+          <a href="index.html#discord">Join</a>
+          <a id="adminLink" href="admin.html" hidden>Admin</a>
+          <a class="nav-btn" id="loginBtn" href="login.html">Login</a>
+          <button class="nav-btn" id="logoutBtn" type="button" hidden>Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero hero-compact">
+        <div class="container hero-inner">
+          <h1>Ticket Created</h1>
+          <p class="lead">Save your Ticket ID so you can reopen this anytime.</p>
+          <div class="hero-actions">
+            <a class="btn btn-ghost" href="ticket.html">Back</a>
+            <a class="btn" href="index.html#discord">Join</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-title">
+            <h2>Your Ticket</h2>
+            <p class="muted" id="createdMeta">Loading…</p>
+          </div>
+
+          <div class="card ticket-card" id="createdCard">
+            <p class="muted" style="margin: 0 0 6px;">Ticket ID</p>
+            <div id="createdId" style="font-weight: 800; font-size: 18px; word-break: break-all;"></div>
+            <div class="ticket-actions" style="margin-top: 12px;">
+              <a class="btn" id="openTicketBtn" href="#">Open Ticket</a>
+              <button class="btn btn-ghost" type="button" id="copyBtn">Copy ID</button>
+              <p class="muted" id="copyStatus" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="music-float" aria-label="Music player">
+      <div class="music-float-inner">
+        <div class="music-float-title">song2</div>
+        <button class="music-toggle" id="musicToggle" type="button">Play</button>
+        <audio id="bgMusic" preload="metadata" loop>
+          <source src="Songs/song2.mp3" type="audio/mpeg" />
+        </audio>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p class="muted"> <span id="year"></span> Canadia Highridge Roleplay</p>
+        <a class="muted" href="index.html">Home</a>
+      </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        logoutBtn.addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+      }
+
+      if (adminLink && window.SPERMLINGS_AUTH.isAdmin()) {
+        adminLink.hidden = false;
+      }
+
+      const getTicketId = () => {
+        const params = new URLSearchParams(window.location.search);
+        return (params.get('id') || localStorage.getItem('spermlings_last_ticket_id') || '').trim();
+      };
+
+      const initCreated = () => {
+        const id = getTicketId();
+        const meta = document.getElementById('createdMeta');
+        const idEl = document.getElementById('createdId');
+        const btn = document.getElementById('openTicketBtn');
+
+        if (!id) {
+          if (meta) meta.textContent = 'Missing Ticket ID.';
+          if (idEl) idEl.textContent = '—';
+          if (btn) btn.setAttribute('href', 'ticket.html');
+          return;
+        }
+
+        if (meta) meta.textContent = 'Ticket sent successfully.';
+        if (idEl) idEl.textContent = id;
+        if (btn) btn.setAttribute('href', `ticket-view.html?id=${encodeURIComponent(id)}&created=1`);
+      };
+
+      const wireCopy = () => {
+        const btn = document.getElementById('copyBtn');
+        const status = document.getElementById('copyStatus');
+        if (!btn || !status) return;
+
+        btn.addEventListener('click', async () => {
+          status.textContent = '';
+          const id = getTicketId();
+          if (!id) {
+            status.textContent = 'Missing ticket ID';
+            return;
+          }
+
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(id);
+              status.textContent = 'Copied.';
+              return;
+            }
+          } catch {
+            // fall back
+          }
+
+          try {
+            const temp = document.createElement('textarea');
+            temp.value = id;
+            temp.setAttribute('readonly', '');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            status.textContent = 'Copied.';
+          } catch {
+            status.textContent = 'Copy failed.';
+          }
+        });
+      };
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const audio = document.getElementById('bgMusic');
+      const toggle = document.getElementById('musicToggle');
+
+      const setState = (isPlaying) => {
+        toggle.textContent = isPlaying ? 'Pause' : 'Play';
+      };
+
+      const tryAutoPlay = async () => {
+        try {
+          await audio.play();
+          setState(true);
+        } catch {
+          setState(false);
+        }
+      };
+
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setState(true);
+          } catch {
+            setState(false);
+          }
+        } else {
+          audio.pause();
+          setState(false);
+        }
+      });
+
+      tryAutoPlay();
+      initCreated();
+      wireCopy();
+    </script>
+  </body>
+</html>

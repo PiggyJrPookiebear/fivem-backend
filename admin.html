@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — admin" />
+    <title>Canadia Highridge Roleplay — Admin</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="staff.html">Staff</a>
+          <a class="is-active" href="admin.html">Admin</a>
+          <button class="nav-btn" id="logoutBtn" type="button">Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="admin-page">
+      <section class="container">
+        <div class="section-title">
+          <h2>Admin Panel</h2>
+          <p>Owner: Dr Piggy jr</p>
+        </div>
+
+        <div class="admin-grid">
+          <div class="card admin-card admin-span">
+            <h3>Settings</h3>
+            <form id="contentForm" class="admin-form">
+              <label class="auth-label" for="apiBase">API Base URL</label>
+              <input class="auth-input" id="apiBase" name="api_base" autocomplete="off" placeholder="https://your-backend.onrender.com" />
+
+              <label class="auth-label" for="adminApiKey">Admin API Key</label>
+              <input class="auth-input" id="adminApiKey" name="admin_api_key" autocomplete="off" placeholder="(optional, recommended)" />
+
+              <div class="admin-actions">
+                <button class="btn" type="submit">Save content</button>
+                <button class="btn btn-ghost" id="resetContentBtn" type="button">Reset content</button>
+              </div>
+              <p id="contentMsg" class="auth-error" hidden></p>
+            </form>
+          </div>
+
+          <div class="card admin-card admin-span">
+            <h3>Tickets</h3>
+            <div class="ticket-admin">
+              <div class="ticket-admin-left">
+                <div class="muted" style="margin-bottom: 8px;">Latest tickets</div>
+                <div id="ticketsList" class="users-list"></div>
+              </div>
+              <div class="ticket-admin-right">
+                <div id="ticketDetail" class="card" style="padding: 14px;">
+                  <p class="muted">Select a ticket to view details.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="content.js"></script>
+    <script>
+      window.SPERMLINGS_AUTH.requireAdmin();
+      document.getElementById('logoutBtn').addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+
+      const contentForm = document.getElementById('contentForm');
+      const contentMsg = document.getElementById('contentMsg');
+      const resetContentBtn = document.getElementById('resetContentBtn');
+
+      const apiBase = document.getElementById('apiBase');
+      const adminApiKey = document.getElementById('adminApiKey');
+
+      const showContentMsg = (text) => {
+        contentMsg.textContent = text;
+        contentMsg.hidden = !text;
+      };
+
+      const loadContentIntoForm = () => {
+        apiBase.value = localStorage.getItem('spermlings_api_base') || '';
+        adminApiKey.value = localStorage.getItem('spermlings_admin_api_key') || '';
+      };
+
+      contentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const base = (apiBase.value || '').trim();
+        if (base) {
+          localStorage.setItem('spermlings_api_base', base.replace(/\/$/, ''));
+        } else {
+          localStorage.removeItem('spermlings_api_base');
+        }
+
+        const adminKey = (adminApiKey.value || '').trim();
+        if (adminKey) {
+          localStorage.setItem('spermlings_admin_api_key', adminKey);
+        } else {
+          localStorage.removeItem('spermlings_admin_api_key');
+        }
+        showContentMsg('Saved');
+      });
+
+      resetContentBtn.addEventListener('click', () => {
+        localStorage.removeItem('spermlings_api_base');
+        localStorage.removeItem('spermlings_admin_api_key');
+        Array.from(contentForm.elements).forEach((el) => {
+          if (!el.name) return;
+          el.value = '';
+        });
+        showContentMsg('Reset');
+      });
+
+      const adminFetchJson = async (url, options = {}) => {
+        const ADMIN_KEY = (localStorage.getItem('spermlings_admin_api_key') || '').trim();
+        const headers = Object.assign({}, options.headers || {});
+        if (ADMIN_KEY) headers['x-admin-key'] = ADMIN_KEY;
+        const res = await fetch(url, Object.assign({}, options, { headers }));
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ''}`);
+        }
+        return await res.json();
+      };
+
+      const ticketsList = document.getElementById('ticketsList');
+      const ticketDetail = document.getElementById('ticketDetail');
+
+      let selectedTicketId = null;
+
+      const renderTicketDetail = (ticket) => {
+        if (!ticket) {
+          ticketDetail.innerHTML = '<p class="muted">Select a ticket to view details.</p>';
+          return;
+        }
+
+        const msgs = Array.isArray(ticket.messages) ? ticket.messages : [];
+        const msgHtml = msgs
+          .map((m) => {
+            const who = m.from === 'admin' ? 'Staff' : 'User';
+            const when = m.at ? new Date(m.at).toLocaleString() : '';
+            const text = (m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<div class="card" style="padding: 10px; margin: 10px 0;"><div class="muted" style="margin-bottom: 6px;">${who}${when ? ` • ${when}` : ''}</div><div>${text}</div></div>`;
+          })
+          .join('');
+
+        ticketDetail.innerHTML = `
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
+            <div>
+              <h4 style="margin:0 0 6px;">Ticket ${ticket.id}</h4>
+              <div class="muted">Status: ${ticket.status || 'open'}</div>
+              <div class="muted">From: ${ticket.name || 'n/a'}${ticket.email ? ` (${ticket.email})` : (ticket.contact ? ` (${ticket.contact})` : '')}</div>
+              <div class="muted">Subject: ${ticket.subject || ''}</div>
+            </div>
+            <button class="btn btn-ghost" id="closeTicketBtn" type="button">Close</button>
+          </div>
+          <div style="margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-ghost" id="statusOpenBtn" type="button">Open</button>
+            <button class="btn btn-ghost" id="statusInProgressBtn" type="button">In progress</button>
+            <button class="btn btn-ghost" id="statusClosedBtn" type="button">Closed</button>
+          </div>
+          <div style="margin-top: 12px;">${msgHtml || '<p class="muted">No messages yet.</p>'}</div>
+          <form id="ticketReplyForm" class="ticket-form" style="margin-top: 10px;">
+            <label class="auth-label" for="ticketReply">Reply</label>
+            <textarea class="auth-input ticket-textarea" id="ticketReply" rows="4"></textarea>
+            <div class="ticket-actions">
+              <button class="btn" type="submit">Send Reply</button>
+              <p class="muted" id="ticketReplyStatus" aria-live="polite"></p>
+            </div>
+          </form>
+        `;
+
+        const closeBtn = document.getElementById('closeTicketBtn');
+        closeBtn.addEventListener('click', async () => {
+          try {
+            const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+            await adminFetchJson(`${API_BASE}/api/admin/tickets/${ticket.id}/close`, { method: 'POST' });
+            await loadTicket(ticket.id);
+            await loadTickets();
+          } catch (e) {
+            const msg = e?.message || 'Failed to close.';
+            const s = document.getElementById('ticketReplyStatus');
+            if (s) s.textContent = msg;
+          }
+        });
+
+        const wireStatusBtn = (id, statusValue) => {
+          const btn = document.getElementById(id);
+          if (!btn) return;
+          btn.addEventListener('click', async () => {
+            const s = document.getElementById('ticketReplyStatus');
+            if (s) s.textContent = '';
+            try {
+              const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+              await adminFetchJson(`${API_BASE}/api/admin/tickets/${ticket.id}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: statusValue }),
+              });
+              await loadTicket(ticket.id);
+              await loadTickets();
+            } catch (e) {
+              const msg = e?.message || 'Failed to update status.';
+              if (s) s.textContent = msg;
+            }
+          });
+        };
+
+        wireStatusBtn('statusOpenBtn', 'open');
+        wireStatusBtn('statusInProgressBtn', 'in_progress');
+        wireStatusBtn('statusClosedBtn', 'closed');
+
+        const replyForm = document.getElementById('ticketReplyForm');
+        replyForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const textArea = document.getElementById('ticketReply');
+          const status = document.getElementById('ticketReplyStatus');
+          const text = (textArea.value || '').trim();
+          status.textContent = '';
+          if (!text) {
+            status.textContent = 'Message required';
+            return;
+          }
+          try {
+            const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+            await adminFetchJson(`${API_BASE}/api/admin/tickets/${ticket.id}/reply`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: text }),
+            });
+            textArea.value = '';
+            await loadTicket(ticket.id);
+            await loadTickets();
+          } catch (err) {
+            status.textContent = err?.message || 'Failed to send.';
+          }
+        });
+      };
+
+      const loadTicket = async (id) => {
+        selectedTicketId = id;
+        ticketDetail.innerHTML = '<p class="muted">Loading…</p>';
+        const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+        const data = await adminFetchJson(`${API_BASE}/api/admin/tickets/${id}`);
+        renderTicketDetail(data.ticket);
+      };
+
+      const loadTickets = async () => {
+        if (!ticketsList || !ticketDetail) return;
+        ticketsList.innerHTML = '<div class="muted">Loading…</div>';
+        try {
+          const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+          const data = await adminFetchJson(`${API_BASE}/api/admin/tickets`);
+          const items = Array.isArray(data.tickets) ? data.tickets : [];
+
+          ticketsList.innerHTML = '';
+          if (!items.length) {
+            ticketsList.innerHTML = '<div class="muted">No tickets yet.</div>';
+            renderTicketDetail(null);
+            return;
+          }
+
+          items.forEach((t) => {
+            const row = document.createElement('div');
+            row.className = 'user-row';
+
+            const meta = document.createElement('div');
+            meta.className = 'user-meta';
+
+            const name = document.createElement('div');
+            name.className = 'user-name';
+            name.textContent = `${(t.subject || 'Ticket')} (${t.status || 'open'})`;
+
+            const sub = document.createElement('div');
+            sub.className = 'user-rank';
+            sub.textContent = `${t.id} • ${(t.name || 'n/a')}${t.email ? ` (${t.email})` : (t.contact ? ` (${t.contact})` : '')}`;
+
+            meta.appendChild(name);
+            meta.appendChild(sub);
+
+            const actions = document.createElement('div');
+            actions.className = 'user-actions';
+
+            const open = document.createElement('button');
+            open.className = 'nav-btn';
+            open.type = 'button';
+            open.textContent = 'Open';
+            open.addEventListener('click', () => loadTicket(t.id));
+
+            actions.appendChild(open);
+            row.appendChild(meta);
+            row.appendChild(actions);
+            ticketsList.appendChild(row);
+          });
+
+          if (selectedTicketId) {
+            const stillExists = items.some((t) => t.id === selectedTicketId);
+            if (stillExists) await loadTicket(selectedTicketId);
+          }
+        } catch (e) {
+          const msg = e?.message || 'Failed to load tickets.';
+          ticketsList.innerHTML = `<div class="muted">${msg}</div>`;
+          ticketDetail.innerHTML = `<p class="muted">${msg}</p>`;
+        }
+      };
+
+      const form = document.getElementById('userForm');
+      const msg = document.getElementById('adminMsg');
+      const list = document.getElementById('usersList');
+      const clearBtn = document.getElementById('clearBtn');
+
+      const uName = document.getElementById('uName');
+      const uPass = document.getElementById('uPass');
+      const uRank = document.getElementById('uRank');
+
+      const showMsg = (text) => {
+        msg.textContent = text;
+        msg.hidden = !text;
+      };
+
+      if (!window.SPERMLINGS_AUTH.loadUsers || !window.SPERMLINGS_AUTH.upsertUser || !window.SPERMLINGS_AUTH.deleteUser) {
+        const userCard = form ? form.closest('.card') : null;
+        const usersCard = list ? list.closest('.card') : null;
+        if (userCard) userCard.hidden = true;
+        if (usersCard) usersCard.hidden = true;
+        if (form) form.addEventListener('submit', (e) => e.preventDefault());
+        if (clearBtn) clearBtn.addEventListener('click', (e) => e.preventDefault());
+        showMsg('User management is disabled.');
+      }
+
+      const render = () => {
+        if (!window.SPERMLINGS_AUTH.loadUsers) return;
+        const users = window.SPERMLINGS_AUTH.loadUsers();
+        list.innerHTML = '';
+
+        users.forEach((u) => {
+          if (!u || !u.username) return;
+
+          const row = document.createElement('div');
+          row.className = 'user-row';
+
+          const meta = document.createElement('div');
+          meta.className = 'user-meta';
+
+          const name = document.createElement('div');
+          name.className = 'user-name';
+          name.textContent = u.username;
+
+          const rank = document.createElement('div');
+          rank.className = 'user-rank';
+          rank.textContent = `rank: ${u.rank || 'member'}`;
+
+          meta.appendChild(name);
+          meta.appendChild(rank);
+
+          const actions = document.createElement('div');
+          actions.className = 'user-actions';
+
+          const edit = document.createElement('button');
+          edit.className = 'nav-btn';
+          edit.type = 'button';
+          edit.textContent = 'Edit';
+          edit.addEventListener('click', () => {
+            uName.value = u.username;
+            uPass.value = u.password || '';
+            uRank.value = u.rank || 'member';
+            showMsg('');
+          });
+
+          const del = document.createElement('button');
+          del.className = 'nav-btn';
+          del.type = 'button';
+          del.textContent = 'Delete';
+          del.disabled = u.username === 'Dr Piggy jr';
+          del.addEventListener('click', () => {
+            window.SPERMLINGS_AUTH.deleteUser(u.username);
+            render();
+          });
+
+          actions.appendChild(edit);
+          actions.appendChild(del);
+
+          row.appendChild(meta);
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      };
+
+      clearBtn.addEventListener('click', () => {
+        if (!window.SPERMLINGS_AUTH.loadUsers) return;
+        uName.value = '';
+        uPass.value = '';
+        uRank.value = 'member';
+        showMsg('');
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!window.SPERMLINGS_AUTH.upsertUser) return;
+        const username = (uName.value || '').trim();
+        const password = uPass.value || '';
+        const rank = uRank.value || 'member';
+
+        if (!username) {
+          showMsg('Username required');
+          return;
+        }
+
+        if (username === 'Dr Piggy jr' && rank !== 'owner') {
+          showMsg('Owner must stay owner');
+          return;
+        }
+
+        window.SPERMLINGS_AUTH.upsertUser({ username, password, rank });
+        showMsg('Saved');
+        render();
+      });
+
+      loadContentIntoForm();
+      render();
+      loadTickets();
+    </script>
+  </body>
+</html>

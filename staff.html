@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — staff" />
+    <title>Canadia Highridge Roleplay — Staff</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html" aria-label="Canadia Highridge Roleplay Home">
+          <img class="brand-logo" src="pics/logo.png" alt="Canadia Highridge Roleplay logo" />
+          <span class="brand-name">Canadia Highridge Roleplay</span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a class="is-active" href="staff.html">Staff</a>
+          <a href="ticket.html">Ticket</a>
+          <a href="index.html#discord">Join</a>
+          <a id="adminLink" href="admin.html" hidden>Admin</a>
+          <a class="nav-btn" id="loginBtn" href="login.html">Login</a>
+          <button class="nav-btn" id="logoutBtn" type="button" hidden>Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero hero-compact">
+        <div class="container hero-inner">
+          <h1>Staff</h1>
+          <p class="lead" data-content-key="staff_lead">Info about our Staff — the people behind the chaos.</p>
+          <div class="hero-actions">
+            <a class="btn" href="index.html#discord">Join</a>
+            <a class="btn btn-ghost" href="index.html">Back to Home</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-title">
+            <h2>Server Team</h2>
+            <p>Live from Discord rank roles</p>
+          </div>
+
+          <div id="discordStaffWrap">
+            <div class="grid" id="discordStaffGrid">
+              <article class="card">
+                <p class="muted">Loading…</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="music-float" aria-label="Music player">
+      <div class="music-float-inner">
+        <div class="music-float-title">song2</div>
+        <button class="music-toggle" id="musicToggle" type="button">Play</button>
+        <audio id="bgMusic" preload="metadata" loop>
+          <source src="Songs/song2.mp3" type="audio/mpeg" />
+        </audio>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <p class="muted"> <span id="year"></span> Canadia Highridge Roleplay</p>
+        <a class="muted" href="index.html">Home</a>
+      </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="content.js"></script>
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        logoutBtn.addEventListener('click', () => window.SPERMLINGS_AUTH.logout());
+      }
+
+      if (adminLink && window.SPERMLINGS_AUTH.isAdmin()) {
+        adminLink.hidden = false;
+      }
+
+      window.SPERMLINGS_CONTENT.applyContent(document);
+
+      const fetchJson = async (url) => {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          let body = '';
+          try {
+            body = await res.text();
+          } catch {
+            body = '';
+          }
+          throw new Error(`HTTP ${res.status}${body ? `: ${body}` : ''}`);
+        }
+        return await res.json();
+      };
+
+      const API_BASE = (localStorage.getItem('spermlings_api_base') || 'http://localhost:3001').replace(/\/$/, '');
+
+      const loadDiscordStaff = async () => {
+        const wrap = document.getElementById('discordStaffWrap');
+        const grid = document.getElementById('discordStaffGrid');
+        if (!wrap || !grid) return;
+        try {
+          const data = await fetchJson(`${API_BASE}/api/discord/staff`);
+
+          const createCard = (m) => {
+            const card = document.createElement('article');
+            card.className = 'card discord-staff-card';
+
+            const top = document.createElement('div');
+            top.className = 'card-top';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            const img = document.createElement('img');
+            img.className = 'avatar-img';
+            img.src = m.avatarUrl;
+            img.alt = m.displayName || m.username;
+            avatar.appendChild(img);
+
+            const meta = document.createElement('div');
+            const h3 = document.createElement('h3');
+            h3.textContent = m.displayName || m.username;
+            const p = document.createElement('p');
+            p.className = 'muted';
+            p.textContent = `@${m.username}`;
+            meta.appendChild(h3);
+            meta.appendChild(p);
+
+            top.appendChild(avatar);
+            top.appendChild(meta);
+
+            card.appendChild(top);
+            return card;
+          };
+
+          if (data && Array.isArray(data.groups)) {
+            const groups = data.groups;
+            wrap.innerHTML = '';
+
+            if (data.stale) {
+              const note = document.createElement('div');
+              note.className = 'card';
+              note.innerHTML = '<p class="muted">Showing cached staff list (Discord temporarily unavailable).</p>';
+              wrap.appendChild(note);
+            }
+
+            const visibleGroups = groups.filter((g) => g && Array.isArray(g.members) && g.members.length);
+            if (!visibleGroups.length) {
+              wrap.innerHTML = '<div class="grid"><article class="card"><p class="muted">No staff found.</p></article></div>';
+              return;
+            }
+
+            visibleGroups.forEach((g) => {
+              const section = document.createElement('section');
+              section.className = 'staff-group';
+
+              const title = document.createElement('div');
+              title.className = 'staff-group-title';
+              const h3 = document.createElement('h3');
+              h3.textContent = g.label || 'Staff';
+              const p = document.createElement('p');
+              p.className = 'muted';
+              p.textContent = `${g.members.length} member(s)`;
+              title.appendChild(h3);
+              title.appendChild(p);
+
+              const groupGrid = document.createElement('div');
+              groupGrid.className = 'grid';
+              g.members.forEach((m) => groupGrid.appendChild(createCard(m)));
+
+              section.appendChild(title);
+              section.appendChild(groupGrid);
+              wrap.appendChild(section);
+            });
+
+            return;
+          }
+
+          const staff = data && Array.isArray(data.staff) ? data.staff : [];
+          if (!staff.length) {
+            grid.innerHTML = '<article class="card"><p class="muted">No staff found.</p></article>';
+            return;
+          }
+
+          grid.innerHTML = '';
+          staff.forEach((m) => grid.appendChild(createCard(m)));
+        } catch (e) {
+          const msg = (e && e.message) ? e.message : 'Unknown error';
+          wrap.innerHTML = `<div class="grid"><article class="card"><p class="muted">Discord staff unavailable.</p><p class="muted">API: ${API_BASE}</p><p class="muted">${msg}</p></article></div>`;
+        }
+      };
+
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const audio = document.getElementById('bgMusic');
+      const toggle = document.getElementById('musicToggle');
+
+      const setState = (isPlaying) => {
+        toggle.textContent = isPlaying ? 'Pause' : 'Play';
+      };
+
+      const tryAutoPlay = async () => {
+        try {
+          await audio.play();
+          setState(true);
+        } catch {
+          setState(false);
+        }
+      };
+
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setState(true);
+          } catch {
+            setState(false);
+          }
+        } else {
+          audio.pause();
+          setState(false);
+        }
+      });
+
+      tryAutoPlay();
+      loadDiscordStaff();
+    </script>
+  </body>
+</html>

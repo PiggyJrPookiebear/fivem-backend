@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canadia Highridge Roleplay — signup" />
+    <title>Canadia Highridge Roleplay — Sign up</title>
+    <link rel="icon" href="pics/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <section class="auth-card">
+        <div class="auth-brand">
+          <img class="brand-logo" src="pics/logo.png" alt="Spermlings logo" />
+          <div>
+            <h1 class="auth-title">Canadia Highridge Roleplay</h1>
+            <p class="muted">Sign up</p>
+          </div>
+        </div>
+
+        <form id="signupForm" class="auth-form">
+          <label class="auth-label" for="username">Username</label>
+          <input class="auth-input" id="username" name="username" autocomplete="username" />
+
+          <label class="auth-label" for="password">Password</label>
+          <input class="auth-input" id="password" name="password" type="password" autocomplete="new-password" />
+
+          <label class="auth-label" for="confirm">Confirm password</label>
+          <input class="auth-input" id="confirm" name="confirm" type="password" autocomplete="new-password" />
+
+          <button class="btn auth-submit" type="submit">Create account</button>
+          <p id="signupError" class="auth-error" hidden>Could not sign up.</p>
+          <p class="muted" style="margin: 10px 0 0;">Already have an account? <a href="login.html">Log in</a></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || 'ticket.html';
+
+      const form = document.getElementById('signupForm');
+      const error = document.getElementById('signupError');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = (document.getElementById('username').value || '').trim();
+        const password = document.getElementById('password').value || '';
+        const confirm = document.getElementById('confirm').value || '';
+
+        error.hidden = true;
+
+        if (!username || !password) {
+          error.textContent = 'Username and password required.';
+          error.hidden = false;
+          return;
+        }
+
+        if (password !== confirm) {
+          error.textContent = 'Passwords do not match.';
+          error.hidden = false;
+          return;
+        }
+
+        try {
+          const ok = await window.SPERMLINGS_AUTH.signup(username, password);
+          if (ok) {
+            window.location.href = next;
+          } else {
+            error.textContent = 'Could not sign up.';
+            error.hidden = false;
+          }
+        } catch (err) {
+          if (err && err.message === 'username_taken') {
+            error.textContent = 'Username is taken.';
+          } else {
+            error.textContent = 'Could not sign up.';
+          }
+          error.hidden = false;
+        }
+      });
+
+      if (window.SPERMLINGS_AUTH.isLoggedIn()) {
+        window.location.href = next;
+      }
+    </script>
+  </body>
+</html>
